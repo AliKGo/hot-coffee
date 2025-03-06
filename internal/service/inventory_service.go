@@ -11,46 +11,45 @@ type InventoryRepository interface {
 	UpdateInventoryOfDal(itemUpdate models.InventoryItem) (string, int)
 	DeleteInventoryOfDal(id string) (string, int)
 }
-
-type InventoryService struct {
+type InventoryServiceImpl struct {
 	InventoryRepository InventoryRepository
 }
 
-func NewInventoryService(inventoryRepository InventoryRepository) *InventoryService {
-	return &InventoryService{InventoryRepository: inventoryRepository}
+func NewInventoryService(inventoryRepository InventoryRepository) *InventoryServiceImpl {
+	return &InventoryServiceImpl{InventoryRepository: inventoryRepository}
 }
 
-func (svc *InventoryService) AddInventoryOfSvc(item models.InventoryItem) (string, int) {
+func (svc *InventoryServiceImpl) AddInventoryOfSvc(item models.InventoryItem) (string, int) {
 	items, msg, code := svc.InventoryRepository.ReadInventoryOfDal()
 
 	if code != http.StatusOK {
-		return "Repository: " + msg, code
+		return msg, code
 	}
 
 	for _, item := range items {
 		if item.IngredientID == item.IngredientID {
-			return "According to this ID, there is an inventory ingredient", 400
+			return "Service: According to this ID, there is an inventory ingredient", http.StatusBadRequest
 		}
 	}
 	msg, code = svc.InventoryRepository.AddInventoryOfDal(item)
 	if code != http.StatusCreated {
-		return "Repository: " + msg, code
+		return msg, code
 	}
 	return "Success", http.StatusCreated
 }
 
-func (svc *InventoryService) UpdateInventoryOfSvc(itemUpdate models.InventoryItem) (string, int) {
+func (svc *InventoryServiceImpl) UpdateInventoryOfSvc(itemUpdate models.InventoryItem) (string, int) {
 	items, msg, code := svc.InventoryRepository.ReadInventoryOfDal()
 
 	if code != http.StatusOK {
-		return "Repository: " + msg, code
+		return msg, code
 	}
 
 	for _, item := range items {
 		if item.IngredientID == item.IngredientID {
 			msg, code = svc.InventoryRepository.UpdateInventoryOfDal(item)
 			if code != http.StatusOK {
-				return "Repository: " + msg, code
+				return msg, code
 			}
 			return "Success", http.StatusOK
 		}
@@ -58,36 +57,36 @@ func (svc *InventoryService) UpdateInventoryOfSvc(itemUpdate models.InventoryIte
 	return "Service: There is no inventory ingredient for such an ID", http.StatusNotFound
 }
 
-func (svc *InventoryService) DeleteInventoryOfDal(id string) (string, int) {
+func (svc *InventoryServiceImpl) DeleteInventoryOfSvc(id string) (string, int) {
 	items, msg, code := svc.InventoryRepository.ReadInventoryOfDal()
 	if code != http.StatusOK {
-		return "Repository: " + msg, code
+		return msg, code
 	}
 
 	for _, item := range items {
 		if item.IngredientID == id {
 			msg, code = svc.InventoryRepository.DeleteInventoryOfDal(id)
 			if code != http.StatusOK {
-				return "Repository: " + msg, code
+				return msg, code
 			}
-			return "No Content", http.StatusNoContent
+			return "Service: No Content", http.StatusNoContent
 		}
 	}
 	return "Service: There is no inventory ingredient for this ID", http.StatusNotFound
 }
 
-func (svc *InventoryService) ReadInventoryOfSvc() ([]models.InventoryItem, string, int) {
+func (svc *InventoryServiceImpl) ReadInventoryOfSvc() ([]models.InventoryItem, string, int) {
 	items, msg, code := svc.InventoryRepository.ReadInventoryOfDal()
 	if code != http.StatusOK {
-		return items, "Repository: " + msg, code
+		return items, msg, code
 	}
 	return items, "Success", http.StatusOK
 }
 
-func (svc *InventoryService) ReadInventoryOfSvcById(id string) (models.InventoryItem, string, int) {
+func (svc *InventoryServiceImpl) ReadInventoryOfSvcById(id string) (models.InventoryItem, string, int) {
 	items, msg, code := svc.InventoryRepository.ReadInventoryOfDal()
 	if code != http.StatusOK {
-		return models.InventoryItem{}, "Repository: " + msg, code
+		return models.InventoryItem{}, msg, code
 	}
 	for _, item := range items {
 		if item.IngredientID == id {
