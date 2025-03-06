@@ -45,7 +45,7 @@ func (repo InventoryRepoImpl) AddInventoryOfDal(item models.InventoryItem) (stri
 	if err != nil {
 		return err.Error(), http.StatusInternalServerError
 	}
-	return "Success", http.StatusOK
+	return "Success", http.StatusCreated
 }
 
 func (repo InventoryRepoImpl) UpdateInventoryOfDal(itemUpdate models.InventoryItem) (string, int) {
