@@ -58,8 +58,8 @@ func (repo MenuRepoImpl) UpdateMenuOfDal(item models.MenuItem) (string, int) {
 		return msg, code
 	}
 
-	for i, item := range items {
-		if item.ID == item.ID {
+	for i, itemMenu := range items {
+		if itemMenu.ID == item.ID {
 			items[i] = item
 		}
 	}
