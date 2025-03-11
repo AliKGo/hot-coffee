@@ -1,5 +1,4 @@
 package app
 
 func StartServer() {
-
 }

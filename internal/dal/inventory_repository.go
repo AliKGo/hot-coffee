@@ -2,10 +2,11 @@ package dal
 
 import (
 	"encoding/json"
-	"frappuccino/models"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"frappuccino/models"
 )
 
 type InventoryRepoImpl struct {
@@ -18,7 +19,6 @@ func InventoryFilePath(baseDir string) InventoryRepoImpl {
 
 func (repo InventoryRepoImpl) ReadInventoryOfDal() ([]models.InventoryItem, string, int) {
 	file, err := os.Open(repo.inventoryFilePath)
-
 	if err != nil {
 		return []models.InventoryItem{}, "Repository: Server Error", http.StatusInternalServerError
 	}

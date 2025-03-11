@@ -1,8 +1,9 @@
 package service
 
 import (
-	"frappuccino/models"
 	"net/http"
+
+	"frappuccino/models"
 )
 
 type InventoryRepository interface {

@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"frappuccino/internal/handler/utilsHandl"
-	"frappuccino/models"
 	"net/http"
 	"strings"
+
+	"frappuccino/internal/handler/utilsHandl"
+	"frappuccino/models"
 )
 
 type InventoryService interface {
@@ -40,7 +41,6 @@ func (invHandl *InventoryHandler) AddInventoryOfHandl() http.HandlerFunc {
 
 		msg, code = invHandl.InventoryService.AddInventoryOfSvc(newInventory)
 		utilsHandl.SendJSONMessages(w, msg, code)
-
 	}
 }
 
