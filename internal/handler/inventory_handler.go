@@ -12,7 +12,7 @@ type InventoryService interface {
 	AddInventoryOfSvc(item models.InventoryItem) (string, int)
 	UpdateInventoryOfSvc(itemUpdate models.InventoryItem) (string, int)
 	DeleteInventoryOfSvc(id string) (string, int)
-	ReadInventoryOfSvc() ([]models.InventoryItem, string, int)
+	ReadInventoryOfSvc() (map[string]models.InventoryItem, string, int)
 	ReadInventoryOfSvcById(id string) (models.InventoryItem, string, int)
 }
 
@@ -50,6 +50,7 @@ func (invHandl *InventoryHandler) UpdateInventoryOfHandl() http.HandlerFunc {
 		msg, code := utilsHandl.ParseJSONBody(r, &newInventory)
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, "Handler: "+msg, code)
+			return
 		}
 		if msg = utilsHandl.ValidateInventory(newInventory); msg != "OK" {
 			utilsHandl.SendJSONMessages(w, "Handler: "+msg, http.StatusBadRequest)
@@ -79,6 +80,7 @@ func (invHandl *InventoryHandler) ReadInventoryOfHandl() http.HandlerFunc {
 		items, msg, code := invHandl.InventoryService.ReadInventoryOfSvc()
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, "Handler: "+msg, code)
+			return
 		}
 		utilsHandl.SendJSONResponse(w, items, code)
 		return
