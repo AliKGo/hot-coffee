@@ -17,8 +17,8 @@ type InventoryServiceImpl struct {
 	InventoryRepository InventoryRepository
 }
 
-func NewInventoryService(inventoryRepository InventoryRepository) *InventoryServiceImpl {
-	return &InventoryServiceImpl{InventoryRepository: inventoryRepository}
+func NewInventoryService(inventoryRepository InventoryRepository, menuRepository MenuRepository) *InventoryServiceImpl {
+	return &InventoryServiceImpl{InventoryRepository: inventoryRepository, MenuRepository: menuRepository}
 }
 
 func (svc *InventoryServiceImpl) AddInventoryOfSvc(item models.InventoryItem) (string, int) {

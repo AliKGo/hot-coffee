@@ -2,6 +2,7 @@ package dal
 
 import (
 	"encoding/json"
+	"frappuccino/tools"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,8 +14,8 @@ type InventoryRepoImpl struct {
 	inventoryFilePath string
 }
 
-func InventoryFilePath(baseDir string) InventoryRepoImpl {
-	return InventoryRepoImpl{inventoryFilePath: filepath.Join(baseDir, "/inventory.json")}
+func InventoryFilePath() InventoryRepoImpl {
+	return InventoryRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/inventory.json")}
 }
 
 func (repo InventoryRepoImpl) ReadInventoryOfDal() (map[string]models.InventoryItem, string, int) {
