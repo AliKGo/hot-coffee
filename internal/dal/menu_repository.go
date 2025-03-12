@@ -18,21 +18,21 @@ func MenuFilePath(baseDir string) InventoryRepoImpl {
 	return InventoryRepoImpl{inventoryFilePath: filepath.Join(baseDir, "/inventory.json")}
 }
 
-func (repo MenuRepoImpl) ReadMenuOfDal() ([]models.MenuItem, string, int) {
+func (repo MenuRepoImpl) ReadMenuOfDal() (map[string]models.MenuItem, string, int) {
 	file, err := os.Open(repo.inventoryFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return []models.MenuItem{}, "Repository: File Not Found", http.StatusNotFound
+			return map[string]models.MenuItem{}, "Repository: File Not Found", http.StatusNotFound
 		}
 		log.Printf("File opening error: %v", err)
-		return []models.MenuItem{}, "Repository: Server Error", http.StatusInternalServerError
+		return map[string]models.MenuItem{}, "Repository: Server Error", http.StatusInternalServerError
 	}
 	defer file.Close()
 
-	var items []models.MenuItem
+	var items map[string]models.MenuItem
 	if err := json.NewDecoder(file).Decode(&items); err != nil {
 		log.Printf("JSON decoding error: %v", err)
-		return []models.MenuItem{}, "Repository: Invalid JSON Format", http.StatusBadRequest
+		return map[string]models.MenuItem{}, "Repository: Invalid JSON Format", http.StatusBadRequest
 	}
 
 	return items, "Success", http.StatusOK
@@ -43,13 +43,22 @@ func (repo MenuRepoImpl) AddMenuOfDal(item models.MenuItem) (string, int) {
 	if code != http.StatusOK {
 		return msg, code
 	}
-	items = append(items, item)
 
+	// Проверяем, есть ли уже элемент с таким ID
+	if _, exists := items[item.ID]; exists {
+		return "Repository: Menu item with this ID already exists", http.StatusBadRequest
+	}
+
+	// Добавляем новый элемент в мапу
+	items[item.ID] = item
+
+	// Записываем обновленный список в файл
 	err := repo.write(items)
 	if err != "Success" {
-		return err, http.StatusInternalServerError
+		return "Repository: " + err, http.StatusInternalServerError
 	}
-	return "Success", http.StatusOK
+
+	return "Success", http.StatusCreated
 }
 
 func (repo MenuRepoImpl) UpdateMenuOfDal(item models.MenuItem) (string, int) {
@@ -71,29 +80,33 @@ func (repo MenuRepoImpl) UpdateMenuOfDal(item models.MenuItem) (string, int) {
 	return "Success", http.StatusOK
 }
 
-func (repo MenuRepoImpl) DeleteMenuOfDal() (string, int) {
+func (repo MenuRepoImpl) DeleteMenuOfDal(id string) (string, int) {
 	items, msg, code := repo.ReadMenuOfDal()
 	if code != http.StatusOK {
 		return msg, code
 	}
 
-	for i, item := range items {
-		if item.ID == items[i].ID {
-			items = append(items[:i], items[i+1:]...)
-			err := repo.write(items)
-			if err != "Success" {
-				return err, http.StatusInternalServerError
-			}
-		}
+	// Проверяем, есть ли элемент с таким ID
+	if _, exists := items[id]; !exists {
+		return "Repository: Menu item not found", http.StatusNotFound
+	}
+
+	// Удаляем элемент из мапы
+	delete(items, id)
+
+	// Записываем обновленные данные
+	err := repo.write(items)
+	if err != "Success" {
+		return "Repository: " + err, http.StatusInternalServerError
 	}
 
 	return "Success", http.StatusNoContent
 }
 
-func (repo MenuRepoImpl) write(items []models.MenuItem) string {
+func (repo MenuRepoImpl) write(items map[string]models.MenuItem) string {
 	file, err := os.Create(repo.inventoryFilePath)
 	if err != nil {
-		return "failed to create inventory file:" + err.Error()
+		return "failed to create inventory file: " + err.Error()
 	}
 	defer file.Close()
 

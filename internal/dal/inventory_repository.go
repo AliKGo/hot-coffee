@@ -17,19 +17,25 @@ func InventoryFilePath(baseDir string) InventoryRepoImpl {
 	return InventoryRepoImpl{inventoryFilePath: filepath.Join(baseDir, "/inventory.json")}
 }
 
-func (repo InventoryRepoImpl) ReadInventoryOfDal() ([]models.InventoryItem, string, int) {
+func (repo InventoryRepoImpl) ReadInventoryOfDal() (map[string]models.InventoryItem, string, int) {
 	file, err := os.Open(repo.inventoryFilePath)
 	if err != nil {
-		return []models.InventoryItem{}, "Repository: Server Error", http.StatusInternalServerError
+		return nil, "Repository: Server Error", http.StatusInternalServerError
 	}
-
 	defer file.Close()
-	var items []models.InventoryItem // Simply decode and read
+
+	var items []models.InventoryItem
 	if err := json.NewDecoder(file).Decode(&items); err != nil {
-		return []models.InventoryItem{}, "Repository: Server Error", http.StatusInternalServerError
+		return nil, "Repository: Server Error", http.StatusInternalServerError
 	}
 
-	return items, "Success", http.StatusOK
+	// Преобразуем срез в map
+	inventoryMap := make(map[string]models.InventoryItem)
+	for _, item := range items {
+		inventoryMap[item.IngredientID] = item // Используем ID как ключ (замени, если надо другое)
+	}
+
+	return inventoryMap, "Success", http.StatusOK
 }
 
 func (repo InventoryRepoImpl) AddInventoryOfDal(item models.InventoryItem) (string, int) {
@@ -37,10 +43,12 @@ func (repo InventoryRepoImpl) AddInventoryOfDal(item models.InventoryItem) (stri
 	if code != http.StatusOK {
 		return msg, code
 	}
-	items = append(items, item)
 
+	// Добавляем новый элемент в мапу
+	items[item.IngredientID] = item
+
+	// Записываем обновлённую мапу в файл
 	err := repo.write(items)
-
 	if err != "Success" {
 		return "Repository: " + err, http.StatusInternalServerError
 	}
@@ -52,16 +60,18 @@ func (repo InventoryRepoImpl) UpdateInventoryOfDal(itemUpdate models.InventoryIt
 	if code != http.StatusOK {
 		return msg, code
 	}
-	for i, item := range items {
-		if item.IngredientID == itemUpdate.IngredientID {
-			items[i].IngredientID = itemUpdate.IngredientID
-			if err := repo.write(items); err != "Success" {
-				return "Repository: " + err, http.StatusInternalServerError
-			}
-			return "Success", http.StatusOK
-		}
+
+	if _, exists := items[itemUpdate.IngredientID]; !exists {
+		return "Repository: Not Found", http.StatusNotFound
 	}
-	return "Repository: Not Found", http.StatusNotFound
+
+	items[itemUpdate.IngredientID] = itemUpdate
+
+	if err := repo.write(items); err != "Success" {
+		return "Repository: " + err, http.StatusInternalServerError
+	}
+
+	return "Success", http.StatusOK
 }
 
 func (repo InventoryRepoImpl) DeleteInventoryOfDal(id string) (string, int) {
@@ -70,26 +80,25 @@ func (repo InventoryRepoImpl) DeleteInventoryOfDal(id string) (string, int) {
 		return msg, code
 	}
 
-	for i, item := range items {
-		if item.IngredientID == id {
-			items = append(items[:i], items[i+1:]...)
-
-			err := repo.write(items)
-
-			if err != "Success" {
-				return "Repository: " + err, http.StatusInternalServerError
-			}
-			return "Success", http.StatusOK
-		}
+	if _, exists := items[id]; !exists {
+		return "Repository: Not Found", http.StatusNotFound
 	}
 
-	return "Repository: Not Found", http.StatusNotFound
+	delete(items, id)
+
+	// Записываем обновлённую мапу в файл
+	err := repo.write(items)
+	if err != "Success" {
+		return "Repository: " + err, http.StatusInternalServerError
+	}
+
+	return "Success", http.StatusOK
 }
 
-func (repo InventoryRepoImpl) write(items []models.InventoryItem) string {
+func (repo InventoryRepoImpl) write(items map[string]models.InventoryItem) string {
 	file, err := os.Create(repo.inventoryFilePath)
 	if err != nil {
-		return "failed to create inventory file:" + err.Error()
+		return "failed to create inventory file: " + err.Error()
 	}
 	defer file.Close()
 
