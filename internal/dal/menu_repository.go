@@ -2,6 +2,7 @@ package dal
 
 import (
 	"encoding/json"
+	"frappuccino/tools"
 	"log"
 	"net/http"
 	"os"
@@ -14,8 +15,8 @@ type MenuRepoImpl struct {
 	inventoryFilePath string
 }
 
-func MenuFilePath(baseDir string) InventoryRepoImpl {
-	return InventoryRepoImpl{inventoryFilePath: filepath.Join(baseDir, "/inventory.json")}
+func MenuFilePath() MenuRepoImpl {
+	return MenuRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/inventory.json")}
 }
 
 func (repo MenuRepoImpl) ReadMenuOfDal() (map[string]models.MenuItem, string, int) {
