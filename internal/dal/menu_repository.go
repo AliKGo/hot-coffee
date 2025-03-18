@@ -16,7 +16,7 @@ type MenuRepoImpl struct {
 }
 
 func MenuFilePath() MenuRepoImpl {
-	return MenuRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/inventory.json")}
+	return MenuRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/menu_items.json")}
 }
 
 func (repo MenuRepoImpl) ReadMenuOfDal() (map[string]models.MenuItem, string, int) {

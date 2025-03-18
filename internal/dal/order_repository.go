@@ -14,7 +14,7 @@ type OrderRepoImpl struct {
 }
 
 func NewOrderRepoImpl() *OrderRepoImpl {
-	return &OrderRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/inventory.json")}
+	return &OrderRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/orders.json")}
 }
 
 func (repo OrderRepoImpl) ReadOrderOfDal() (map[string]models.Order, string, int) {

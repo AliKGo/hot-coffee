@@ -15,12 +15,16 @@ func StartServer() {
 
 	invRepo := dal.InventoryFilePath()
 	menuRepo := dal.MenuFilePath()
+	orderRepo := dal.NewOrderRepoImpl()
 
 	invSvc := service.NewInventoryService(invRepo, menuRepo)
 	invHandl := handler.NewInventoryHandler(invSvc)
 
 	menuSvc := service.NewMenuService(menuRepo, invRepo)
 	menuHandl := handler.NewMenuHandler(menuSvc)
+
+	orderSvc := service.NewOrderService(orderRepo, menuRepo, invRepo)
+	orderHandl := handler.NewOrderHandler(orderSvc)
 
 	mux.HandleFunc("POST /menu", menuHandl.AddMenuOfHandl())
 	mux.HandleFunc("GET /menu", menuHandl.ReadMenuOfHandl())
@@ -34,5 +38,14 @@ func StartServer() {
 	mux.HandleFunc("PUT /orders/{id}", invHandl.UpdateInventoryOfHandl())
 	mux.HandleFunc("DELETE /orders/{id}", invHandl.DeleteInventoryOfHandl())
 
-	//mux.HandleFunc("")
+	mux.HandleFunc("POST /orders", orderHandl.AddOrderOfHandle())
+	mux.HandleFunc("GET /orders", orderHandl.ReadOrderOfHandle())
+	mux.HandleFunc("GET /orders/{id}", orderHandl.ReadOrderOfHandleByID())
+	mux.HandleFunc("PUT /orders/{id}", orderHandl.UpdateOrderOfHandle())
+	mux.HandleFunc("DELETE /orders/{id}", orderHandl.DeleteOrderOfHandle())
+	mux.HandleFunc("POST /orders/{id}/close", orderHandl.CloseOrderOfHandle())
+
+	fmt.Println("Server listening on port", *tools.Port)
+	log.Fatal(http.ListenAndServe(":"+*tools.Port, mux))
+
 }
