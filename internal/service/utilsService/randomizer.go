@@ -7,7 +7,8 @@ import (
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func GenerateRandomString(length int) string {
+func GenerateRandomString() string {
+	var length = 40
 	rand.Seed(time.Now().UnixNano())
 	result := make([]byte, length)
 	for i := range result {

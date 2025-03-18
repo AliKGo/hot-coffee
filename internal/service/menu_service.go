@@ -80,5 +80,13 @@ func (svc *MenuServiceImpl) UpdateMenuOfSvc(itemMenu models.MenuItem) (string, i
 }
 
 func (svc *MenuServiceImpl) DeleteMenuOfSvc(id string) (string, int) {
+	items, msg, code := svc.MenuRepository.ReadMenuOfDal()
+	if code != http.StatusOK {
+		return msg, code
+	}
+
+	if _, exists := items[id]; !exists {
+		return "Service: there is no item menu", http.StatusBadRequest
+	}
 	return svc.MenuRepository.DeleteMenuOfDal(id)
 }
