@@ -4,6 +4,7 @@ import (
 	"frappuccino/internal/service/utilsService"
 	"frappuccino/models"
 	"net/http"
+	"time"
 )
 
 type OrderRepository interface {
@@ -13,29 +14,21 @@ type OrderRepository interface {
 	AddOrderOfDal(item models.Order) (string, int)
 }
 
-type OrderService struct {
+type OrderServiceImpl struct {
 	repoOrder OrderRepository
 	repoMenu  MenuRepository
 	repoInv   InventoryRepository
 }
 
-type OrderServiceImpl interface {
-	ReadOrderOfService() (map[string]models.Order, string, int)
-	AddOrderOfService(order models.Order) (string, int)
-	UpdateOrderOfService(orderUpdate models.Order) (string, int)
-	DeleteOrderOfService(id string) (string, int)
-	ReadOrderOfServiceByID(id string) (models.Order, string, int)
+func NewOrderService(repoOrder OrderRepository, repoMenu MenuRepository, repoInv InventoryRepository) *OrderServiceImpl {
+	return &OrderServiceImpl{repoOrder, repoMenu, repoInv}
 }
 
-func NewOrderService(repoOrder OrderRepository, repoMenu MenuRepository, repoInv InventoryRepository) *OrderService {
-	return &OrderService{repoOrder, repoMenu, repoInv}
-}
-
-func (svc *OrderService) ReadOrderOfService() (map[string]models.Order, string, int) {
+func (svc *OrderServiceImpl) ReadOrderOfService() (map[string]models.Order, string, int) {
 	return svc.repoOrder.ReadOrderOfDal()
 }
 
-func (svc *OrderService) AddOrderOfService(order models.Order) (string, int) {
+func (svc *OrderServiceImpl) AddOrderOfService(order models.Order) (string, int) {
 	listMenu, msg, code := svc.repoMenu.ReadMenuOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -86,11 +79,13 @@ func (svc *OrderService) AddOrderOfService(order models.Order) (string, int) {
 			}
 		}
 	}
+	order.CreatedAt = time.Now().String()
+	order.Status = "open"
 
 	return svc.repoOrder.AddOrderOfDal(order)
 }
 
-func (svc *OrderService) UpdateOrderOfService(orderUpdate models.Order) (string, int) {
+func (svc *OrderServiceImpl) UpdateOrderOfService(orderUpdate models.Order) (string, int) {
 	listOrder, msg, code := svc.repoOrder.ReadOrderOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -166,7 +161,7 @@ func (svc *OrderService) UpdateOrderOfService(orderUpdate models.Order) (string,
 	return svc.repoOrder.UpdateOrderOfDal(orderUpdate)
 }
 
-func (svc *OrderService) DeleteOrderOfService(id string) (string, int) {
+func (svc *OrderServiceImpl) DeleteOrderOfService(id string) (string, int) {
 	items, msg, code := svc.repoOrder.ReadOrderOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -212,7 +207,7 @@ func (svc *OrderService) DeleteOrderOfService(id string) (string, int) {
 	return svc.repoOrder.DeleteOrderOfDal(order)
 }
 
-func (svc *OrderService) ReadOrderOfServiceByID(id string) (models.Order, string, int) {
+func (svc *OrderServiceImpl) ReadOrderOfServiceByID(id string) (models.Order, string, int) {
 	items, msg, code := svc.repoOrder.ReadOrderOfDal()
 	if code != http.StatusOK {
 		return models.Order{}, msg, code
@@ -221,4 +216,21 @@ func (svc *OrderService) ReadOrderOfServiceByID(id string) (models.Order, string
 		return order, "Success", http.StatusOK
 	}
 	return models.Order{}, "Service: Not Found", http.StatusNotFound
+}
+
+func (svc *OrderServiceImpl) CloseOrderOfService(id string) (string, int) {
+	listOrder, msg, code := svc.repoOrder.ReadOrderOfDal()
+	if code != http.StatusOK {
+		return msg, code
+	}
+
+	if _, exists := listOrder[id]; !exists {
+		return "Service: There is no order for this ID", http.StatusBadRequest
+	}
+	if listOrder[id].Status != "open" {
+		return "Service: This order is not open", http.StatusBadRequest
+	}
+	order := listOrder[id]
+	order.Status = "closed"
+	return svc.repoOrder.UpdateOrderOfDal(order)
 }

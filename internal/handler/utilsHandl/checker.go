@@ -49,3 +49,21 @@ func ValidateMenu(i models.MenuItem) string {
 
 	return "OK"
 }
+
+func ValidateOrder(o models.Order) string {
+	if o.CustomerName == "" {
+		return "Customer name cannot be empty!"
+	}
+	if len(o.Items) == 0 {
+		return "Order must contain at least one item!"
+	}
+	for _, item := range o.Items {
+		if item.ProductID == "" {
+			return "Product ID cannot be empty in order items!"
+		}
+		if item.Quantity <= 0 {
+			return "Quantity must be greater than zero in order items!"
+		}
+	}
+	return "OK"
+}
