@@ -4,6 +4,7 @@ import (
 	"frappuccino/internal/service/utilsService"
 	"frappuccino/models"
 	"net/http"
+	"sort"
 	"time"
 )
 
@@ -233,4 +234,61 @@ func (svc *OrderServiceImpl) CloseOrderOfService(id string) (string, int) {
 	order := listOrder[id]
 	order.Status = "closed"
 	return svc.repoOrder.UpdateOrderOfDal(order)
+}
+
+func (svc *OrderServiceImpl) TotalSalesOfSvc() (float64, string, int) {
+	items, msg, code := svc.repoOrder.ReadOrderOfDal()
+	if code != http.StatusOK {
+		return 0, msg, code
+	}
+
+	listMenu, msg, code := svc.repoMenu.ReadMenuOfDal()
+	if code != http.StatusOK {
+		return 0, msg, code
+	}
+
+	var totalSales float64 = 0
+
+	for _, order := range items {
+		if order.Status != "closed" {
+			continue
+		}
+		for _, orderItem := range order.Items {
+			totalSales += listMenu[orderItem.ProductID].Price * float64(orderItem.Quantity)
+		}
+	}
+	return totalSales, "Success", http.StatusOK
+}
+
+func (svc *OrderServiceImpl) PopularItemsOfSvc() ([]models.OrderItem, string, int) {
+	items, msg, code := svc.repoOrder.ReadOrderOfDal()
+	if code != http.StatusOK {
+		return nil, msg, code
+	}
+
+	var popularItems map[string]int
+
+	for _, order := range items {
+		if order.Status != "closed" {
+			continue
+		}
+		for _, orderItem := range order.Items {
+			if _, exists := popularItems[orderItem.ProductID]; exists {
+				quantity := popularItems[orderItem.ProductID] + orderItem.Quantity
+				popularItems[orderItem.ProductID] = quantity
+			}
+			popularItems[orderItem.ProductID] = orderItem.Quantity
+		}
+	}
+
+	var orderItems []models.OrderItem
+	for id, quantity := range popularItems {
+		orderItems = append(orderItems, models.OrderItem{id, quantity})
+	}
+
+	sort.Slice(orderItems, func(i, j int) bool {
+		return orderItems[i].Quantity > orderItems[j].Quantity // Меняй `<` для сортировки по возрастанию
+	})
+
+	return orderItems, "Success", http.StatusOK
 }

@@ -2,7 +2,9 @@ package dal
 
 import (
 	"encoding/json"
+	"errors"
 	"frappuccino/tools"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,25 +17,23 @@ type InventoryRepoImpl struct {
 }
 
 func InventoryFilePath() InventoryRepoImpl {
-	return InventoryRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/inventory.json")}
+	return InventoryRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/json/inventory.json")}
 }
 
 func (repo InventoryRepoImpl) ReadInventoryOfDal() (map[string]models.InventoryItem, string, int) {
 	file, err := os.Open(repo.inventoryFilePath)
 	if err != nil {
-		return nil, "Repository: Server Error", http.StatusInternalServerError
+		return nil, "Repository Error: " + err.Error(), http.StatusInternalServerError
 	}
 	defer file.Close()
 
-	var items []models.InventoryItem
-	if err := json.NewDecoder(file).Decode(&items); err != nil {
-		return nil, "Repository: Server Error", http.StatusInternalServerError
-	}
-
-	// Преобразуем срез в map
-	inventoryMap := make(map[string]models.InventoryItem)
-	for _, item := range items {
-		inventoryMap[item.IngredientID] = item // Используем ID как ключ (замени, если надо другое)
+	var inventoryMap map[string]models.InventoryItem
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&inventoryMap); err != nil {
+		if errors.Is(err, io.EOF) {
+			return make(map[string]models.InventoryItem), "Success (empty file)", http.StatusOK
+		}
+		return nil, "Repository Error: " + err.Error(), http.StatusInternalServerError
 	}
 
 	return inventoryMap, "Success", http.StatusOK
@@ -63,7 +63,7 @@ func (repo InventoryRepoImpl) UpdateInventoryOfDal(itemUpdate models.InventoryIt
 	}
 
 	if _, exists := items[itemUpdate.IngredientID]; !exists {
-		return "Repository: Not Found", http.StatusNotFound
+		return "Repository: Not found", http.StatusNotFound
 	}
 
 	items[itemUpdate.IngredientID] = itemUpdate
@@ -82,7 +82,7 @@ func (repo InventoryRepoImpl) DeleteInventoryOfDal(id string) (string, int) {
 	}
 
 	if _, exists := items[id]; !exists {
-		return "Repository: Not Found", http.StatusNotFound
+		return "Repository: Not found", http.StatusNotFound
 	}
 
 	delete(items, id)

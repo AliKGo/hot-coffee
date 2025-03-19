@@ -58,7 +58,7 @@ func SplittingThePath(str string) []string {
 func validateDir() error {
 	pathElements := SplittingThePath(*Dir)
 	for i := 0; i < len(pathElements); i++ {
-		if pathElements[i] == "hot-coffee" || pathElements[i] == "cmd" || pathElements[i] == "internal" || pathElements[i] == "models" {
+		if pathElements[i] == "tools" || pathElements[i] == "app" || pathElements[i] == "frappuccino" || pathElements[i] == "cmd" || pathElements[i] == "internal" || pathElements[i] == "models" {
 			return fmt.Errorf("forbidden dir")
 		}
 	}

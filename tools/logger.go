@@ -8,7 +8,7 @@ import (
 var Logger *slog.Logger
 
 func InitLogger() {
-	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	file, err := os.OpenFile(*Dir+"/logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		slog.Error("Failed to open log file", "error", err)
 		return

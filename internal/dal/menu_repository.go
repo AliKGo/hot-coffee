@@ -2,8 +2,9 @@ package dal
 
 import (
 	"encoding/json"
+	"errors"
 	"frappuccino/tools"
-	"log"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,27 +17,25 @@ type MenuRepoImpl struct {
 }
 
 func MenuFilePath() MenuRepoImpl {
-	return MenuRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/menu_items.json")}
+	return MenuRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/json/menu_items.json")}
 }
 
 func (repo MenuRepoImpl) ReadMenuOfDal() (map[string]models.MenuItem, string, int) {
 	file, err := os.Open(repo.inventoryFilePath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return map[string]models.MenuItem{}, "Repository: File Not Found", http.StatusNotFound
-		}
-		log.Printf("File opening error: %v", err)
-		return map[string]models.MenuItem{}, "Repository: Server Error", http.StatusInternalServerError
+		return nil, "failed to open menu file: " + err.Error(), http.StatusInternalServerError
 	}
 	defer file.Close()
 
-	var items map[string]models.MenuItem
-	if err := json.NewDecoder(file).Decode(&items); err != nil {
-		log.Printf("JSON decoding error: %v", err)
-		return map[string]models.MenuItem{}, "Repository: Invalid JSON Format", http.StatusBadRequest
+	var menuMap map[string]models.MenuItem
+	if err := json.NewDecoder(file).Decode(&menuMap); err != nil {
+		if errors.Is(err, io.EOF) {
+			return make(map[string]models.MenuItem), "Success (empty file)", http.StatusOK
+		}
+		return nil, "failed to decode menu file: " + err.Error(), http.StatusInternalServerError
 	}
 
-	return items, "Success", http.StatusOK
+	return menuMap, "Success", http.StatusOK
 }
 
 func (repo MenuRepoImpl) AddMenuOfDal(item models.MenuItem) (string, int) {

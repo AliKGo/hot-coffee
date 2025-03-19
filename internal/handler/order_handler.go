@@ -14,19 +14,21 @@ type OrderService interface {
 	DeleteOrderOfService(id string) (string, int)
 	ReadOrderOfServiceByID(id string) (models.Order, string, int)
 	CloseOrderOfService(id string) (string, int)
+	TotalSalesOfSvc() (float64, string, int)
+	PopularItemsOfSvc() ([]models.OrderItem, string, int)
 }
 
 type OrderHandler struct {
-	menuService OrderService
+	orderService OrderService
 }
 
 func NewOrderHandler(menuService OrderService) *OrderHandler {
-	return &OrderHandler{menuService: menuService}
+	return &OrderHandler{orderService: menuService}
 }
 
 func (h *OrderHandler) ReadOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		orders, msg, code := h.menuService.ReadOrderOfService()
+		orders, msg, code := h.orderService.ReadOrderOfService()
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return
@@ -43,7 +45,7 @@ func (h *OrderHandler) ReadOrderOfHandleByID() http.HandlerFunc {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
 		}
-		order, msg, code := h.menuService.ReadOrderOfServiceByID(id)
+		order, msg, code := h.orderService.ReadOrderOfServiceByID(id)
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return
@@ -68,7 +70,7 @@ func (h *OrderHandler) AddOrderOfHandle() http.HandlerFunc {
 			return
 		}
 
-		msg, code = h.menuService.AddOrderOfService(newOrder)
+		msg, code = h.orderService.AddOrderOfService(newOrder)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
@@ -95,7 +97,7 @@ func (h *OrderHandler) UpdateOrderOfHandle() http.HandlerFunc {
 
 		newOrder.ID = id
 
-		msg, code = h.menuService.UpdateOrderOfService(newOrder)
+		msg, code = h.orderService.UpdateOrderOfService(newOrder)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
@@ -108,7 +110,7 @@ func (h *OrderHandler) DeleteOrderOfHandle() http.HandlerFunc {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
 		}
-		msg, code := h.menuService.DeleteOrderOfService(id)
+		msg, code := h.orderService.DeleteOrderOfService(id)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
@@ -121,8 +123,36 @@ func (h *OrderHandler) CloseOrderOfHandle() http.HandlerFunc {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
 		}
-		msg, code := h.menuService.CloseOrderOfService(id)
+		msg, code := h.orderService.CloseOrderOfService(id)
 		utilsHandl.SendJSONMessages(w, msg, code)
+		return
+	}
+}
+
+func (h *OrderHandler) TotalSalesOfHandle() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if totalSales, msg, code := h.orderService.TotalSalesOfSvc(); code != http.StatusOK {
+			utilsHandl.SendJSONMessages(w, msg, code)
+			return
+		} else {
+			response := models.Response{
+				TotalSales: totalSales,
+			}
+			utilsHandl.SendJSONResponse(w, response, code)
+			return
+		}
+	}
+}
+
+func (h *OrderHandler) PopularItemsOfHandle() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		items, msg, code := h.orderService.PopularItemsOfSvc()
+		if code != http.StatusOK {
+			utilsHandl.SendJSONMessages(w, msg, code)
+			return
+		}
+
+		utilsHandl.SendJSONResponse(w, items, code)
 		return
 	}
 }

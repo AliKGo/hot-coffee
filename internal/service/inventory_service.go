@@ -98,10 +98,10 @@ func (svc *InventoryServiceImpl) ReadInventoryOfSvcById(id string) (models.Inven
 	if code != http.StatusOK {
 		return models.InventoryItem{}, msg, code
 	}
-	for _, item := range items {
-		if item.IngredientID == id {
-			return item, "Success", http.StatusOK
-		}
+
+	if item, ok := items[id]; ok {
+		return item, "Success", http.StatusOK
 	}
+
 	return models.InventoryItem{}, "Service: There is no inventory for this ID", http.StatusNotFound
 }

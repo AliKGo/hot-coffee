@@ -24,7 +24,7 @@ func NewMenuHandler(menuService MenuService) *MenuHandler {
 	return &MenuHandler{MenuService: menuService}
 }
 
-func (menuHandler *MenuHandler) ReadMenuOfHandl() http.HandlerFunc {
+func (menuHandler *MenuHandler) ReadMenuOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		item, msg, code := menuHandler.MenuService.ReadMenuOfSvc()
 		if code != http.StatusOK {
@@ -36,7 +36,7 @@ func (menuHandler *MenuHandler) ReadMenuOfHandl() http.HandlerFunc {
 	}
 }
 
-func (menuHandler *MenuHandler) ReadMenuOfHandlByID() http.HandlerFunc {
+func (menuHandler *MenuHandler) ReadMenuOfHandleByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/menu/")
 		item, msg, code := menuHandler.MenuService.ReadMenuOfSvcByID(id)
@@ -49,7 +49,7 @@ func (menuHandler *MenuHandler) ReadMenuOfHandlByID() http.HandlerFunc {
 	}
 }
 
-func (menuHandler *MenuHandler) AddMenuOfHandl() http.HandlerFunc {
+func (menuHandler *MenuHandler) AddMenuOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newMenuItem models.MenuItem
 		msg, code := utilsHandl.ParseJSONBody(r, &newMenuItem)
@@ -70,7 +70,7 @@ func (menuHandler *MenuHandler) AddMenuOfHandl() http.HandlerFunc {
 	}
 }
 
-func (menuHandler *MenuHandler) UpdateMenuOfHandl() http.HandlerFunc {
+func (menuHandler *MenuHandler) UpdateMenuOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newMenuItem models.MenuItem
 		msg, code := utilsHandl.ParseJSONBody(r, &newMenuItem)
@@ -91,7 +91,7 @@ func (menuHandler *MenuHandler) UpdateMenuOfHandl() http.HandlerFunc {
 	}
 }
 
-func (menuHandler *MenuHandler) DeleteMenuOfHandl() http.HandlerFunc {
+func (menuHandler *MenuHandler) DeleteMenuOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/menu/")
 		if id == "" {

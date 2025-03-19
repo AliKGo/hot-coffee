@@ -1,26 +1,32 @@
 package tools
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
-func CheckDir(path string) bool { // Если существует дирректория то true
-	info, err := os.Stat(path)
-	if nil != err {
-		return false
+func CheckJsonFiles() error {
+	var dir = *Dir
+	// Создание папки, если её нет
+	jsonDir := dir + "/json"
+	if err := os.MkdirAll(jsonDir, os.ModePerm); err != nil {
+		return fmt.Errorf("ошибка при создании папки: %w", err)
 	}
-	return info.IsDir()
-}
 
-func CheckJsonFils() {
-	if _, err := os.Stat(*Dir + "/inventory.json"); err != nil {
-		os.Create(*Dir + "/inventory.json")
-	}
-	if _, err := os.Stat(*Dir + "/orders.json"); err != nil {
-		os.Create(*Dir + "/orders.json")
-	}
-	if _, err := os.Stat(*Dir + "/menu_items.json"); err != nil {
-		os.Create(*Dir + "/menu_items.json")
-	}
-}
+	// Список файлов для создания
+	files := []string{"inventory.json", "orders.json", "menu_items.json"}
 
-func CheckINT() {
+	// Проверка и создание файлов
+	for _, file := range files {
+		filePath := jsonDir + "/" + file
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			f, err := os.Create(filePath)
+			if err != nil {
+				return fmt.Errorf("ошибка при создании файла %s: %w", filePath, err)
+			}
+			defer f.Close()
+		}
+	}
+
+	return nil
 }
