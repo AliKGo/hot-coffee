@@ -40,7 +40,7 @@ func (h *OrderHandler) ReadOrderOfHandle() http.HandlerFunc {
 
 func (h *OrderHandler) ReadOrderOfHandleByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := strings.TrimPrefix(r.URL.Path, "/order/")
+		id := strings.TrimPrefix(r.URL.Path, "/orders/")
 		if id == "" {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
@@ -78,7 +78,7 @@ func (h *OrderHandler) AddOrderOfHandle() http.HandlerFunc {
 
 func (h *OrderHandler) UpdateOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := strings.TrimPrefix(r.URL.Path, "/order/")
+		id := strings.TrimPrefix(r.URL.Path, "/orders/")
 		if id == "" {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
@@ -105,7 +105,7 @@ func (h *OrderHandler) UpdateOrderOfHandle() http.HandlerFunc {
 
 func (h *OrderHandler) DeleteOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := strings.TrimPrefix(r.URL.Path, "/order/")
+		id := strings.TrimPrefix(r.URL.Path, "/orders/")
 		if id == "" {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
@@ -118,7 +118,9 @@ func (h *OrderHandler) DeleteOrderOfHandle() http.HandlerFunc {
 
 func (h *OrderHandler) CloseOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := strings.TrimPrefix(r.URL.Path, "/order/")
+		id := strings.TrimPrefix(r.URL.Path, "/orders/")
+		id = strings.TrimSuffix(id, "/close")
+
 		if id == "" {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return

@@ -72,6 +72,7 @@ func (svc *OrderServiceImpl) AddOrderOfService(order models.Order) (string, int)
 		return msg, code
 	}
 
+	order.ID = utilsService.GenerateRandomString()
 	if _, exists := listOrder[order.ID]; exists {
 		for exists {
 			order.ID = utilsService.GenerateRandomString()
@@ -266,7 +267,7 @@ func (svc *OrderServiceImpl) PopularItemsOfSvc() ([]models.OrderItem, string, in
 		return nil, msg, code
 	}
 
-	var popularItems map[string]int
+	popularItems := make(map[string]int)
 
 	for _, order := range items {
 		if order.Status != "closed" {
@@ -274,10 +275,10 @@ func (svc *OrderServiceImpl) PopularItemsOfSvc() ([]models.OrderItem, string, in
 		}
 		for _, orderItem := range order.Items {
 			if _, exists := popularItems[orderItem.ProductID]; exists {
-				quantity := popularItems[orderItem.ProductID] + orderItem.Quantity
-				popularItems[orderItem.ProductID] = quantity
+				popularItems[orderItem.ProductID] += orderItem.Quantity
+			} else {
+				popularItems[orderItem.ProductID] = orderItem.Quantity
 			}
-			popularItems[orderItem.ProductID] = orderItem.Quantity
 		}
 	}
 
@@ -287,7 +288,7 @@ func (svc *OrderServiceImpl) PopularItemsOfSvc() ([]models.OrderItem, string, in
 	}
 
 	sort.Slice(orderItems, func(i, j int) bool {
-		return orderItems[i].Quantity > orderItems[j].Quantity // Меняй `<` для сортировки по возрастанию
+		return orderItems[i].Quantity > orderItems[j].Quantity
 	})
 
 	return orderItems, "Success", http.StatusOK
