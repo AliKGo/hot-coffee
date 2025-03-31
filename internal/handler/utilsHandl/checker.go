@@ -47,6 +47,10 @@ func ValidateMenu(i models.MenuItem) string {
 		}
 	}
 
+	if i.Type != models.TypeBeverage && i.Type != models.TypeBreakfast && i.Type != models.TypeSnack && i.Type != models.TypeDessert && i.Type != models.TypeMainCourse {
+		return "Validation error: type must be either beverage or breakfast"
+	}
+
 	return "OK"
 }
 

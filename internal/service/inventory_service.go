@@ -67,11 +67,11 @@ func (svc *InventoryServiceImpl) DeleteInventoryOfSvc(id string) (string, int) {
 		return "Service: There is no inventory ingredient for this ID", http.StatusNotFound
 	}
 
-	itemsMenu, msg, code := svc.MenuRepository.ReadMenuOfDal()
+	listMenu, msg, code := svc.MenuRepository.ReadMenuOfDal()
 
-	for _, itemMenu := range itemsMenu {
-		for _, itemIngredients := range itemMenu.Ingredients {
-			if _, data := items[itemIngredients.IngredientID]; data {
+	for _, menuItem := range listMenu {
+		for _, menuItemIngredient := range menuItem.Ingredients {
+			if id == menuItemIngredient.IngredientID {
 				return "Service: This inventory item is used in the menu!", http.StatusBadRequest
 			}
 		}

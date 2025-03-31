@@ -41,15 +41,19 @@ func (svc *OrderServiceImpl) AddOrderOfService(order models.Order) (string, int)
 	}
 
 	var listUpdate []string
-
 	for _, orderItem := range order.Items {
 		if _, exists := listMenu[orderItem.ProductID]; !exists {
 			return "Service: There is no menu item for this ID", http.StatusBadRequest
 		}
-		for _, menuItemIngredient := range listMenu[orderItem.ProductID].Ingredients {
+
+		order.TotalPrice += listMenu[orderItem.ProductID].Price
+
+		for i, menuItemIngredient := range listMenu[orderItem.ProductID].Ingredients {
 			if _, exists := listInv[menuItemIngredient.IngredientID]; !exists {
 				return "Service: There is no inventory item for this ID", http.StatusBadRequest
 			}
+
+			order.Items[i].PriceDuringTheOrder = listMenu[orderItem.ProductID].Price
 
 			if listInv[menuItemIngredient.IngredientID].Quantity < menuItemIngredient.Quantity*float64(orderItem.Quantity) {
 				return "Service: There is not enough inventory", http.StatusBadRequest
@@ -82,7 +86,7 @@ func (svc *OrderServiceImpl) AddOrderOfService(order models.Order) (string, int)
 		}
 	}
 	order.CreatedAt = time.Now().String()
-	order.Status = "open"
+	order.Status = models.Open
 
 	return svc.repoOrder.AddOrderOfDal(order)
 }
@@ -93,10 +97,14 @@ func (svc *OrderServiceImpl) UpdateOrderOfService(orderUpdate models.Order) (str
 		return msg, code
 	}
 
-	order := listOrder[orderUpdate.ID]
-
 	if _, exists := listOrder[orderUpdate.ID]; !exists {
 		return "Service: There is no order for this ID", http.StatusBadRequest
+	}
+
+	order := listOrder[orderUpdate.ID]
+
+	if listOrder[orderUpdate.ID].Status != models.Open {
+		return "Service: The order has already been closed", http.StatusBadRequest
 	}
 
 	listMenu, msg, code := svc.repoMenu.ReadMenuOfDal()
@@ -126,13 +134,14 @@ func (svc *OrderServiceImpl) UpdateOrderOfService(orderUpdate models.Order) (str
 		}
 	}
 
-	listAddorder := []string{}
-
+	listAddOrder := []string{}
+	order.TotalPrice = 0
 	for _, orderItem := range orderUpdate.Items {
 		if _, exists := listMenu[orderItem.ProductID]; !exists {
 			return "Service: There is no menu item for this ID", http.StatusBadRequest
 		}
 
+		order.TotalPrice += listMenu[orderItem.ProductID].Price
 		for _, menuItemIngredient := range listMenu[orderItem.ProductID].Ingredients {
 			if _, exists := listInv[menuItemIngredient.IngredientID]; !exists {
 				return "Service: There is no inventory item for this ID", http.StatusBadRequest
@@ -142,7 +151,7 @@ func (svc *OrderServiceImpl) UpdateOrderOfService(orderUpdate models.Order) (str
 				return "Service: There is not enough inventory", http.StatusBadRequest
 			}
 			newItemInv := listInv[menuItemIngredient.IngredientID]
-			listAddorder = append(listAddorder, menuItemIngredient.IngredientID)
+			listAddOrder = append(listAddOrder, menuItemIngredient.IngredientID)
 			newItemInv.Quantity = listInv[menuItemIngredient.IngredientID].Quantity - menuItemIngredient.Quantity*float64(orderItem.Quantity)
 			listInv[menuItemIngredient.IngredientID] = newItemInv
 		}
@@ -154,7 +163,7 @@ func (svc *OrderServiceImpl) UpdateOrderOfService(orderUpdate models.Order) (str
 		}
 	}
 
-	for _, item := range listAddorder {
+	for _, item := range listAddOrder {
 		if msg, code = svc.repoInv.UpdateInventoryOfDal(listInv[item]); code != http.StatusOK {
 			return msg, code
 		}
@@ -173,6 +182,10 @@ func (svc *OrderServiceImpl) DeleteOrderOfService(id string) (string, int) {
 
 	if _, exists := items[id]; !exists {
 		return "Service: There is no order for this ID", http.StatusBadRequest
+	}
+
+	if order.Status != models.Open {
+		return "Service: The order has already been closed", http.StatusBadRequest
 	}
 
 	listMenu, msg, code := svc.repoMenu.ReadMenuOfDal()
@@ -229,11 +242,11 @@ func (svc *OrderServiceImpl) CloseOrderOfService(id string) (string, int) {
 	if _, exists := listOrder[id]; !exists {
 		return "Service: There is no order for this ID", http.StatusBadRequest
 	}
-	if listOrder[id].Status != "open" {
+	if listOrder[id].Status != models.Open {
 		return "Service: This order is not open", http.StatusBadRequest
 	}
 	order := listOrder[id]
-	order.Status = "closed"
+	order.Status = models.Closed
 	return svc.repoOrder.UpdateOrderOfDal(order)
 }
 
@@ -251,7 +264,7 @@ func (svc *OrderServiceImpl) TotalSalesOfSvc() (float64, string, int) {
 	var totalSales float64 = 0
 
 	for _, order := range items {
-		if order.Status != "closed" {
+		if order.Status != models.Open {
 			continue
 		}
 		for _, orderItem := range order.Items {
@@ -270,7 +283,7 @@ func (svc *OrderServiceImpl) PopularItemsOfSvc() ([]models.OrderItem, string, in
 	popularItems := make(map[string]int)
 
 	for _, order := range items {
-		if order.Status != "closed" {
+		if order.Status == models.Open {
 			continue
 		}
 		for _, orderItem := range order.Items {
@@ -284,7 +297,7 @@ func (svc *OrderServiceImpl) PopularItemsOfSvc() ([]models.OrderItem, string, in
 
 	var orderItems []models.OrderItem
 	for id, quantity := range popularItems {
-		orderItems = append(orderItems, models.OrderItem{id, quantity})
+		orderItems = append(orderItems, models.OrderItem{id, quantity, 0})
 	}
 
 	sort.Slice(orderItems, func(i, j int) bool {

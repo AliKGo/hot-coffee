@@ -16,11 +16,11 @@ type MenuRepoImpl struct {
 	inventoryFilePath string
 }
 
-func MenuFilePath() MenuRepoImpl {
-	return MenuRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/json/menu_items.json")}
+func MenuFilePath() *MenuRepoImpl {
+	return &MenuRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/json/menu_items.json")}
 }
 
-func (repo MenuRepoImpl) ReadMenuOfDal() (map[string]models.MenuItem, string, int) {
+func (repo *MenuRepoImpl) ReadMenuOfDal() (map[string]models.MenuItem, string, int) {
 	file, err := os.Open(repo.inventoryFilePath)
 	if err != nil {
 		return nil, "failed to open menu file: " + err.Error(), http.StatusInternalServerError
@@ -38,7 +38,7 @@ func (repo MenuRepoImpl) ReadMenuOfDal() (map[string]models.MenuItem, string, in
 	return menuMap, "Success", http.StatusOK
 }
 
-func (repo MenuRepoImpl) AddMenuOfDal(item models.MenuItem) (string, int) {
+func (repo *MenuRepoImpl) AddMenuOfDal(item models.MenuItem) (string, int) {
 	items, msg, code := repo.ReadMenuOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -61,7 +61,7 @@ func (repo MenuRepoImpl) AddMenuOfDal(item models.MenuItem) (string, int) {
 	return "Success", http.StatusCreated
 }
 
-func (repo MenuRepoImpl) UpdateMenuOfDal(item models.MenuItem) (string, int) {
+func (repo *MenuRepoImpl) UpdateMenuOfDal(item models.MenuItem) (string, int) {
 	items, msg, code := repo.ReadMenuOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -80,7 +80,7 @@ func (repo MenuRepoImpl) UpdateMenuOfDal(item models.MenuItem) (string, int) {
 	return "Success", http.StatusOK
 }
 
-func (repo MenuRepoImpl) DeleteMenuOfDal(id string) (string, int) {
+func (repo *MenuRepoImpl) DeleteMenuOfDal(id string) (string, int) {
 	items, msg, code := repo.ReadMenuOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -103,7 +103,7 @@ func (repo MenuRepoImpl) DeleteMenuOfDal(id string) (string, int) {
 	return "Success", http.StatusNoContent
 }
 
-func (repo MenuRepoImpl) write(items map[string]models.MenuItem) string {
+func (repo *MenuRepoImpl) write(items map[string]models.MenuItem) string {
 	file, err := os.Create(repo.inventoryFilePath)
 	if err != nil {
 		return "failed to create inventory file: " + err.Error()

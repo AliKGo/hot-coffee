@@ -26,9 +26,9 @@ func NewOrderHandler(menuService OrderService) *OrderHandler {
 	return &OrderHandler{orderService: menuService}
 }
 
-func (h *OrderHandler) ReadOrderOfHandle() http.HandlerFunc {
+func (orderHandle *OrderHandler) ReadOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		orders, msg, code := h.orderService.ReadOrderOfService()
+		orders, msg, code := orderHandle.orderService.ReadOrderOfService()
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return
@@ -38,14 +38,14 @@ func (h *OrderHandler) ReadOrderOfHandle() http.HandlerFunc {
 	}
 }
 
-func (h *OrderHandler) ReadOrderOfHandleByID() http.HandlerFunc {
+func (orderHandle *OrderHandler) ReadOrderOfHandleByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/orders/")
 		if id == "" {
-			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
+			utilsHandl.SendJSONMessages(w, "Handler: No ID was entered", http.StatusBadRequest)
 			return
 		}
-		order, msg, code := h.orderService.ReadOrderOfServiceByID(id)
+		order, msg, code := orderHandle.orderService.ReadOrderOfServiceByID(id)
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return
@@ -56,7 +56,7 @@ func (h *OrderHandler) ReadOrderOfHandleByID() http.HandlerFunc {
 	}
 }
 
-func (h *OrderHandler) AddOrderOfHandle() http.HandlerFunc {
+func (orderHandle *OrderHandler) AddOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newOrder models.Order
 		msg, code := utilsHandl.ParseJSONBody(r, &newOrder)
@@ -70,17 +70,17 @@ func (h *OrderHandler) AddOrderOfHandle() http.HandlerFunc {
 			return
 		}
 
-		msg, code = h.orderService.AddOrderOfService(newOrder)
+		msg, code = orderHandle.orderService.AddOrderOfService(newOrder)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
 }
 
-func (h *OrderHandler) UpdateOrderOfHandle() http.HandlerFunc {
+func (orderHandle *OrderHandler) UpdateOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/orders/")
 		if id == "" {
-			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
+			utilsHandl.SendJSONMessages(w, "Handler: No ID was entered", http.StatusBadRequest)
 			return
 		}
 		var newOrder models.Order
@@ -95,28 +95,32 @@ func (h *OrderHandler) UpdateOrderOfHandle() http.HandlerFunc {
 			return
 		}
 
-		newOrder.ID = id
+		if newOrder.ID != id {
+			utilsHandl.SendJSONMessages(w, "Handler: The ID in the url and in the request body cannot be different", http.StatusBadRequest)
+			return
 
-		msg, code = h.orderService.UpdateOrderOfService(newOrder)
+		}
+
+		msg, code = orderHandle.orderService.UpdateOrderOfService(newOrder)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
 }
 
-func (h *OrderHandler) DeleteOrderOfHandle() http.HandlerFunc {
+func (orderHandle *OrderHandler) DeleteOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/orders/")
 		if id == "" {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
 		}
-		msg, code := h.orderService.DeleteOrderOfService(id)
+		msg, code := orderHandle.orderService.DeleteOrderOfService(id)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
 }
 
-func (h *OrderHandler) CloseOrderOfHandle() http.HandlerFunc {
+func (orderHandle *OrderHandler) CloseOrderOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/orders/")
 		id = strings.TrimSuffix(id, "/close")
@@ -125,15 +129,16 @@ func (h *OrderHandler) CloseOrderOfHandle() http.HandlerFunc {
 			utilsHandl.SendJSONMessages(w, "ID is empty", http.StatusBadRequest)
 			return
 		}
-		msg, code := h.orderService.CloseOrderOfService(id)
+		
+		msg, code := orderHandle.orderService.CloseOrderOfService(id)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
 }
 
-func (h *OrderHandler) TotalSalesOfHandle() http.HandlerFunc {
+func (orderHandle *OrderHandler) TotalSalesOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if totalSales, msg, code := h.orderService.TotalSalesOfSvc(); code != http.StatusOK {
+		if totalSales, msg, code := orderHandle.orderService.TotalSalesOfSvc(); code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return
 		} else {
@@ -146,9 +151,9 @@ func (h *OrderHandler) TotalSalesOfHandle() http.HandlerFunc {
 	}
 }
 
-func (h *OrderHandler) PopularItemsOfHandle() http.HandlerFunc {
+func (orderHandle *OrderHandler) PopularItemsOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		items, msg, code := h.orderService.PopularItemsOfSvc()
+		items, msg, code := orderHandle.orderService.PopularItemsOfSvc()
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return

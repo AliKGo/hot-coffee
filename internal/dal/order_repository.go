@@ -19,7 +19,7 @@ func NewOrderRepoImpl() *OrderRepoImpl {
 	return &OrderRepoImpl{inventoryFilePath: filepath.Join(*tools.Dir, "/json/orders.json")}
 }
 
-func (repo OrderRepoImpl) ReadOrderOfDal() (map[string]models.Order, string, int) {
+func (repo *OrderRepoImpl) ReadOrderOfDal() (map[string]models.Order, string, int) {
 	file, err := os.Open(repo.inventoryFilePath)
 	if err != nil {
 		return nil, "Repository: Server error", http.StatusInternalServerError
@@ -37,7 +37,7 @@ func (repo OrderRepoImpl) ReadOrderOfDal() (map[string]models.Order, string, int
 	return orderMap, "Success", http.StatusOK
 }
 
-func (repo OrderRepoImpl) UpdateOrderOfDal(item models.Order) (string, int) {
+func (repo *OrderRepoImpl) UpdateOrderOfDal(item models.Order) (string, int) {
 	items, msg, code := repo.ReadOrderOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -55,7 +55,7 @@ func (repo OrderRepoImpl) UpdateOrderOfDal(item models.Order) (string, int) {
 	return "Success", http.StatusOK
 }
 
-func (repo OrderRepoImpl) DeleteOrderOfDal(item models.Order) (string, int) {
+func (repo *OrderRepoImpl) DeleteOrderOfDal(item models.Order) (string, int) {
 	items, msg, code := repo.ReadOrderOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -74,7 +74,7 @@ func (repo OrderRepoImpl) DeleteOrderOfDal(item models.Order) (string, int) {
 	return "Success", http.StatusNoContent
 }
 
-func (repo OrderRepoImpl) AddOrderOfDal(item models.Order) (string, int) {
+func (repo *OrderRepoImpl) AddOrderOfDal(item models.Order) (string, int) {
 	items, msg, code := repo.ReadOrderOfDal()
 	if code != http.StatusOK {
 		return msg, code
@@ -91,7 +91,7 @@ func (repo OrderRepoImpl) AddOrderOfDal(item models.Order) (string, int) {
 	return "Success", http.StatusOK
 }
 
-func (repo OrderRepoImpl) write(items map[string]models.Order) string {
+func (repo *OrderRepoImpl) write(items map[string]models.Order) string {
 	file, err := os.Create(repo.inventoryFilePath)
 	if err != nil {
 		return "Repository: Failed to create inventory file - " + err.Error()

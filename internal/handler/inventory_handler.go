@@ -24,7 +24,7 @@ func NewInventoryHandler(inventoryService InventoryService) *InventoryHandler {
 	return &InventoryHandler{InventoryService: inventoryService}
 }
 
-func (invHandl *InventoryHandler) AddInventoryOfHandle() http.HandlerFunc {
+func (invHandle *InventoryHandler) AddInventoryOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newInventory models.InventoryItem
 		msg, code := utilsHandl.ParseJSONBody(r, &newInventory)
@@ -39,33 +39,37 @@ func (invHandl *InventoryHandler) AddInventoryOfHandle() http.HandlerFunc {
 			return
 		}
 
-		msg, code = invHandl.InventoryService.AddInventoryOfSvc(newInventory)
+		msg, code = invHandle.InventoryService.AddInventoryOfSvc(newInventory)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
 }
 
-func (invHandl *InventoryHandler) UpdateInventoryOfHandle() http.HandlerFunc {
+func (invHandle *InventoryHandler) UpdateInventoryOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var newInventory models.InventoryItem
 		msg, code := utilsHandl.ParseJSONBody(r, &newInventory)
+		if id := strings.TrimPrefix(r.URL.Path, "/inventory/"); id != newInventory.IngredientID {
+			utilsHandl.SendJSONMessages(w, "Handler: The ID in the url and in the request body cannot be different", http.StatusBadRequest)
+			return
+		}
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, "Handler: "+msg, code)
 			return
 		}
-		
+
 		if msg = utilsHandl.ValidateInventory(newInventory); msg != "OK" {
 			utilsHandl.SendJSONMessages(w, "Handler: "+msg, http.StatusBadRequest)
 			return
 		}
 
-		msg, code = invHandl.InventoryService.UpdateInventoryOfSvc(newInventory)
+		msg, code = invHandle.InventoryService.UpdateInventoryOfSvc(newInventory)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
 }
 
-func (invHandl *InventoryHandler) DeleteInventoryOfHandle() http.HandlerFunc {
+func (invHandle *InventoryHandler) DeleteInventoryOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/inventory/")
 		if id == "" {
@@ -73,15 +77,15 @@ func (invHandl *InventoryHandler) DeleteInventoryOfHandle() http.HandlerFunc {
 			return
 		}
 
-		msg, code := invHandl.InventoryService.DeleteInventoryOfSvc(id)
+		msg, code := invHandle.InventoryService.DeleteInventoryOfSvc(id)
 		utilsHandl.SendJSONMessages(w, msg, code)
 		return
 	}
 }
 
-func (invHandl *InventoryHandler) ReadInventoryOfHandle() http.HandlerFunc {
+func (invHandle *InventoryHandler) ReadInventoryOfHandle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		items, msg, code := invHandl.InventoryService.ReadInventoryOfSvc()
+		items, msg, code := invHandle.InventoryService.ReadInventoryOfSvc()
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return
@@ -92,7 +96,7 @@ func (invHandl *InventoryHandler) ReadInventoryOfHandle() http.HandlerFunc {
 	}
 }
 
-func (invHandl *InventoryHandler) ReadInventoryOfHandleByID() http.HandlerFunc {
+func (invHandle *InventoryHandler) ReadInventoryOfHandleByID() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimPrefix(r.URL.Path, "/inventory/")
 		if id == "" {
@@ -100,7 +104,7 @@ func (invHandl *InventoryHandler) ReadInventoryOfHandleByID() http.HandlerFunc {
 			return
 		}
 
-		item, msg, code := invHandl.InventoryService.ReadInventoryOfSvcById(id)
+		item, msg, code := invHandle.InventoryService.ReadInventoryOfSvcById(id)
 		if code != http.StatusOK {
 			utilsHandl.SendJSONMessages(w, msg, code)
 			return

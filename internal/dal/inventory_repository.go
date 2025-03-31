@@ -2,7 +2,6 @@ package dal
 
 import (
 	"encoding/json"
-	"errors"
 	"frappuccino/tools"
 	"io"
 	"net/http"
@@ -30,9 +29,10 @@ func (repo InventoryRepoImpl) ReadInventoryOfDal() (map[string]models.InventoryI
 	var inventoryMap map[string]models.InventoryItem
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&inventoryMap); err != nil {
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF || err.Error() == "unexpected end of JSON input" {
 			return make(map[string]models.InventoryItem), "Success (empty file)", http.StatusOK
 		}
+
 		return nil, "Repository Error: " + err.Error(), http.StatusInternalServerError
 	}
 

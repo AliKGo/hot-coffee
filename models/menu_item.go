@@ -16,7 +16,7 @@ type MenuItem struct {
 	Description string               `json:"description"`
 	Price       float64              `json:"price"`
 	Ingredients []MenuItemIngredient `json:"ingredients"`
-	Type        Type
+	Type        Type                 `json:"type"`
 }
 
 type MenuItemIngredient struct {
